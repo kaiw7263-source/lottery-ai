@@ -8,18 +8,22 @@ st.title("🎲 AI彩票演算｜开奖+技巧选号+最多5注")
 if "history" not in st.session_state:
     st.session_state.history = []
 
+# 换稳定可访问的开奖接口
 @st.cache_data(ttl=300)
 def get_lottery():
-    headers = {"User‑Agent":"Mozilla/5.0"}
     try:
-        ssq = requests.get("https://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice?name=ssq&issueCount=1", headers=headers, timeout=8).json()["result"][0]
-        dlt = requests.get("https://www.cwl.gov.cn/cwl_admin/front/cwlkj/search/kjxx/findDrawNotice?name=dlt&issueCount=1", headers=headers, timeout=8).json()["result"][0]
-        return {
-            "ssq": f"第{ssq['code']}期 红球 {' '.join(ssq['red'].split(','))} 蓝球 {ssq['blue']}",
-            "dlt": f"第{dlt['code']}期 前区 {' '.join(dlt['red'].split(','))} 后区 {' '.join(dlt['blue'].split(','))}"
-        }
+        # 双色球接口
+        ssq_res = requests.get("http://www.caijiapi.com/api/ssq", timeout=10)
+        ssq_data = ssq_res.json()
+        ssq = f"第{ssq_data['code']}期 红球 {' '.join(ssq_data['red'])} 蓝球 {ssq_data['blue']}"
+
+        # 大乐透接口
+        dlt_res = requests.get("http://www.caijiapi.com/api/dlt", timeout=10)
+        dlt_data = dlt_res.json()
+        dlt = f"第{dlt_data['code']}期 前区 {' '.join(dlt_data['front'])} 后区 {' '.join(dlt_data['back'])}"
+        return {"ssq": ssq, "dlt": dlt}
     except:
-        return {"ssq":"获取失败","dlt":"获取失败"}
+        return {"ssq": "获取失败，可手动查询", "dlt": "获取失败，可手动查询"}
 
 data = get_lottery()
 st.subheader("📢 最新开奖号码")
